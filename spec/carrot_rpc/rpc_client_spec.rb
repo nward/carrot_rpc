@@ -57,6 +57,17 @@ RSpec.describe CarrotRpc::RpcClient do
     end
   end
 
+  describe "default methods" do
+    it "normally includes default methods" do
+      expect(client_class.instance_methods).to include(:show)
+    end
+
+    it "removes default methods when no_default_methods is called" do
+      client_class.no_default_methods
+      expect(client_class.instance_methods).not_to include(:show)
+    end
+  end
+
   describe "#remote_call" do
     before :each do
       CarrotRpc.configuration.rpc_client_request_key_format = :dasherize

@@ -31,4 +31,18 @@ module CarrotRpc::ClientActions
   def update(params)
     remote_call("update", params)
   end
+
+  # Let us define class methods in this included module. Used below.
+  def self.included(base)
+    base.extend(ClassMethods)
+  end
+
+  module ClassMethods
+    # Remove the default methods above.
+    def no_default_methods
+      CarrotRpc::ClientActions.instance_methods.each do |instance_method|
+        undef_method instance_method
+      end
+    end
+  end
 end
