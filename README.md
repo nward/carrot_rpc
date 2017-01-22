@@ -188,7 +188,7 @@ Example Client: `app/clients/cars_client.rb`
     # optional hook to modify params before submission
     before_request proc { |params| params.merge(foo: "bar") }
 
-    # By default RpcClient defines the following Railsy inspired methods:
+    # By default RpcClient defines the following Railsy inspired methods. (These can be disabled, see below):
     # def show(params)
     # def index(params)
     # def create(params)
@@ -210,6 +210,14 @@ class CarsController < ApplicationController
     result = car_client.show({id: 1})
   end
 end
+```
+
+The default methods described above (show/index/create/update) can be disabled by calling the `no_default_methods` class method, like so:
+```ruby
+  class CarClient < CarrotRpc::RpcClient
+    queue_name "car_queue"
+    no_default_methods
+  end
 ```
 
 One way to implement a RpcClient is to override the default configuration.
@@ -257,25 +265,25 @@ Example Server with JSONAPI functionality:
 class CarServer < CarrotRpc::RpcServer
   extend CarrotRpc::RpcServer::JSONAPIResources::Actions
   include CarrotRpc::RpcServer::JSONAPIResources
-  
+
   # declare the actions to enable
   actions: :create, :destroy, :index, :show, :update
- 
+
   # Context so it can build urls
   def base_url
     "http://foo.com"
   end
-  
+
   # Context to find the resource and create links.
   def controller
     "api/cars"
   end
- 
+
   # JSONAPI::Resource example: `app/resources/car_resource.rb`
   def resource_klass
     CarResource
   end
-  
+
   queue_name "car_queue"
 
   def show(params)
