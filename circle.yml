@@ -1,8 +1,15 @@
 machine:
   services:
     - rabbitmq-server
+dependencies:
+  override:
+    - 'rvm-exec 2.2.6 bundle install'
+    - 'rvm-exec 2.3.3 bundle install'
+    - 'rvm-exec 2.4.0 bundle install'
 test:
   override:
-    - RAILS_ENV=test bundle exec rspec -r rspec_junit_formatter --format RspecJunitFormatter -o $CIRCLE_TEST_REPORTS/rspec/junit.xml
+    - 'RAILS_ENV=test rvm-exec 2.2.6 bundle exec rspec -r rspec_junit_formatter --format RspecJunitFormatter -o $CIRCLE_TEST_REPORTS/rspec/junit.xml'
+    - 'RAILS_ENV=test rvm-exec 2.3.3 bundle exec rspec -r rspec_junit_formatter --format RspecJunitFormatter -o $CIRCLE_TEST_REPORTS/rspec/junit.xml'
+    - 'RAILS_ENV=test rvm-exec 2.4.0 bundle exec rspec -r rspec_junit_formatter --format RspecJunitFormatter -o $CIRCLE_TEST_REPORTS/rspec/junit.xml'
   post:
-    - bundle exec rubocop
+    - 'rvm-exec 2.2.6 bundle exec rubocop'

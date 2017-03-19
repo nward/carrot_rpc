@@ -3,42 +3,46 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Changelog](#changelog)
+  - [v0.8.1](#v081)
+    - [Enhancements](#enhancements)
+  - [v0.8.0](#v080)
+    - [Enhancements](#enhancements-1)
   - [v0.7.1](#v071)
     - [Bug Fixes](#bug-fixes)
   - [v0.7.0](#v070)
     - [Bug Fixes](#bug-fixes-1)
     - [Incompatible Changes](#incompatible-changes)
   - [v0.6.0](#v060)
-    - [Enhancements](#enhancements)
+    - [Enhancements](#enhancements-2)
   - [v0.5.1](#v051)
     - [Bug Fixes](#bug-fixes-2)
   - [v0.5.0](#v050)
-    - [Enhancements](#enhancements-1)
+    - [Enhancements](#enhancements-3)
     - [Incompatible Changes](#incompatible-changes-1)
   - [v0.4.1](#v041)
     - [Bug Fixes](#bug-fixes-3)
   - [v0.4.0](#v040)
-    - [Enhancements](#enhancements-2)
+    - [Enhancements](#enhancements-4)
     - [Bug Fixes](#bug-fixes-4)
     - [Incompatible Changes](#incompatible-changes-2)
   - [v0.3.0](#v030)
-    - [Enhancements](#enhancements-3)
+    - [Enhancements](#enhancements-5)
     - [Bug Fixes](#bug-fixes-5)
   - [v0.2.3](#v023)
-    - [Enhancements](#enhancements-4)
+    - [Enhancements](#enhancements-6)
     - [Bug Fixes](#bug-fixes-6)
     - [Upgrading](#upgrading)
   - [v0.2.1](#v021)
     - [Bug Fixes](#bug-fixes-7)
   - [v0.2.0](#v020)
-    - [Enhancements](#enhancements-5)
+    - [Enhancements](#enhancements-7)
     - [Bug Fixes](#bug-fixes-8)
     - [Incompatible Changes](#incompatible-changes-3)
   - [v0.1.2](#v012)
-    - [Enhancements](#enhancements-6)
+    - [Enhancements](#enhancements-8)
     - [Bug Fixes](#bug-fixes-9)
   - [v0.1.1](#v011)
-    - [Enhancements](#enhancements-7)
+    - [Enhancements](#enhancements-9)
     - [Bug Fixes](#bug-fixes-10)
     - [Incompatible Changes](#incompatible-changes-4)
 
@@ -47,8 +51,12 @@
 # Changelog
 All significant changes in the project are documented here.
 
+## v0.8.1
+### Enhancements
+* Update to Ruby 2.2.6 and have tests run for Ruby 2.3 and 2.4.
+
 ## v0.8.0
-### Enchancements
+### Enhancements
 * Don't assume that Bunny already has a connection to RabbitMQ.
 * Attempt to start Bunny for the servers
 * This allows the implementing application to decide when to start the connection when using a forking web server

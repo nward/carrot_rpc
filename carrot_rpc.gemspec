@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   # Production requirements
 
   # Common extensions from Rails
-  spec.add_dependency "activesupport", "~> 4.2"
+  spec.add_dependency "activesupport", ">= 4.2", "< 6.x"
   # The RabbitMQ library
   spec.add_dependency "bunny", "~> 2.2"
 
