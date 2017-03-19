@@ -11,6 +11,7 @@
     - [Writing Servers](#writing-servers)
     - [Writing Clients](#writing-clients)
       - [Using request threading in clients](#using-request-threading-in-clients)
+      - [Errors](#errors)
     - [Support for JSONAPI::Resources](#support-for-jsonapiresources)
   - [Development](#development)
   - [Contributing](#contributing)
@@ -249,6 +250,9 @@ class ProfileClient < CarrotRpc::RpcClient
 end
 ```
 
+#### Errors
+If a JSON-RPC error is returned, a CarrotRpc::Error exception is raised with the appropriate attributes set. If a malformed JSON-RPC error is returned (i.e. code or message are missing), an CarrotRpc::Exception::InvalidResponse exception is raised.
+
 ### Support for JSONAPI::Resources
 In the case that you're writing an application that uses the `jsonapi-resources` gem and you want the `RpcServer` to have the same functionality, then we got you covered. All you need to do is import a few modules. See [jsonapi-resources](https://github.com/cerebris/jsonapi-resources) for details on how to implement resources for your models.
 
@@ -257,25 +261,25 @@ Example Server with JSONAPI functionality:
 class CarServer < CarrotRpc::RpcServer
   extend CarrotRpc::RpcServer::JSONAPIResources::Actions
   include CarrotRpc::RpcServer::JSONAPIResources
-  
+
   # declare the actions to enable
   actions: :create, :destroy, :index, :show, :update
- 
+
   # Context so it can build urls
   def base_url
     "http://foo.com"
   end
-  
+
   # Context to find the resource and create links.
   def controller
     "api/cars"
   end
- 
+
   # JSONAPI::Resource example: `app/resources/car_resource.rb`
   def resource_klass
     CarResource
   end
-  
+
   queue_name "car_queue"
 
   def show(params)

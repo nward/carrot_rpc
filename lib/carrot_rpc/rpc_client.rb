@@ -88,6 +88,12 @@ class CarrotRpc::RpcClient
       # the receiving thread won't be able to find the correlation_id in @results
       result = @results[correlation_id].pop
       @results.delete correlation_id # remove item from hash. prevents memory leak.
+
+      # If we get an exception, raise it in this thread, so the application can deal with it.
+      if result.is_a? Exception
+        raise result
+      end
+
       result
     end
   ensure
@@ -151,7 +157,26 @@ class CarrotRpc::RpcClient
       response[:result]
     # data is the key holding the error information
     elsif response.key?(:error)
-      response[:error][:data]
+      # If we don't have a code, throw an exception.
+      unless response[:error].has_key? :code and
+          response[:error].has_key? :message
+        return CarrotRpc::Exception::InvalidResponse.new
+      end
+
+      if response[:error].has_key? :data
+        error = CarrotRpc::Error.new(
+          code: response[:error][:code],
+          message: response[:error][:message],
+          data: response[:error][:data]
+        )
+      else
+        error = CarrotRpc::Error.new(
+          code: response[:error][:code],
+          message: response[:error][:message]
+        )
+      end
+
+      error
     else
       response
     end
