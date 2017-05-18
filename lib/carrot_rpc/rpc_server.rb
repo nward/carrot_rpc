@@ -18,8 +18,7 @@ class CarrotRpc::RpcServer
     @channel = config.bunny.create_channel
     @logger = config.logger
     @block = block
-    queue_name = self.class.test_queue_name(self.class.queue_name, config.server_test_mode)
-    @server_queue = @channel.queue(queue_name)
+    setup_queue(config)
     @exchange = @channel.default_exchange
   end
 
@@ -90,6 +89,11 @@ class CarrotRpc::RpcServer
     else
       :reply_method_not_found
     end
+  end
+
+  def setup_queue(config)
+    queue_name = self.class.test_queue_name(self.class.queue_name, config.server_test_mode)
+    @server_queue = @channel.queue(queue_name, self.class.queue_options)
   end
 
   def thread_request(request_message:)

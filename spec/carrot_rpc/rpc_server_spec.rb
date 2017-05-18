@@ -78,7 +78,7 @@ RSpec.describe CarrotRpc::RpcServer do
     end
   end
 
-  describe "#queue_name" do
+  describe ".queue_name" do
     let(:server_class) {
       Class.new(CarrotRpc::RpcServer)
     }
@@ -110,6 +110,25 @@ RSpec.describe CarrotRpc::RpcServer do
         server_class.queue_name nil
         expect { server }.to raise_error CarrotRpc::Exception::InvalidQueueName
       end
+    end
+  end
+
+  describe ".queue_options" do
+    let(:server_class) {
+      Class.new(CarrotRpc::RpcServer)
+    }
+
+    let(:server) {
+      server_class.new(block: false)
+    }
+
+    it "is readable by queue_options/0" do
+      server_class.queue_options durable: true
+      expect(server_class.queue_options).to eq(durable: true)
+    end
+
+    it "does returns empty hash as default" do
+      expect(server_class.queue_options).to eq({})
     end
   end
 

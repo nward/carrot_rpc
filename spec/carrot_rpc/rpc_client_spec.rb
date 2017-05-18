@@ -10,7 +10,7 @@ RSpec.describe CarrotRpc::RpcClient do
     Class.new(CarrotRpc::RpcClient)
   }
 
-  describe "#queue_name" do
+  describe ".queue_name" do
     it "has a queue name class method" do
       client_class.queue_name "foo"
       expect(client_class.queue_name).to eq "foo"
@@ -53,6 +53,35 @@ RSpec.describe CarrotRpc::RpcClient do
 
       it "fails if queue name is missing" do
         expect { client.start }.to raise_error CarrotRpc::Exception::InvalidQueueName
+      end
+    end
+  end
+
+  describe ".queue_options" do
+    it "has a queue options class method" do
+      client_class.queue_options durable: true
+      expect(client_class.queue_options).to eq(durable: true)
+    end
+
+    context "during #start" do
+      let(:channel) {
+        instance_double(Bunny::Channel, default_exchange: nil)
+      }
+
+      before(:each) do
+        allow(CarrotRpc.configuration.bunny).to receive(:create_channel).and_return(channel)
+      end
+
+      it "does set options with defaults" do
+        expect(channel).to receive(:queue).with(nil, auto_delete: false, durable: true)
+        client_class.queue_options durable: true
+        client.start
+      end
+
+      it "does override auto_delete" do
+        expect(channel).to receive(:queue).with(nil, auto_delete: true)
+        client_class.queue_options auto_delete: true
+        client.start
       end
     end
   end
@@ -135,6 +164,20 @@ RSpec.describe CarrotRpc::RpcClient do
       # I don't feel like waiting for the default 5 seconds...do you?
       CarrotRpc.configuration.rpc_client_timeout = 0.1
       expect { client.wait_for_result("Bogus-123") }.to raise_error CarrotRpc::Exception::RpcClientTimeout
+      expect(client.instance_variable_get(:@results)).to_not have_key("Bogus-123")
+    end
+
+    it "raises an exception when an exception is on the queue" do
+      allow(client.channel).to receive(:close)
+
+      # Synthesize the result from #parse_response going in to a queue.
+      exception = StandardError.new("Bogus error")
+      client.instance_variable_get(:@results)["Bogus-123"].push exception
+
+      expect { client.wait_for_result("Bogus-123") }.to raise_error {|error|
+        expect(error).to be_a(StandardError)
+        expect(error.message).to eq("Bogus error")
+      }
     end
   end
 
@@ -170,15 +213,36 @@ RSpec.describe CarrotRpc::RpcClient do
 
         # Instance Methods
 
+        def index(_params)
+          {
+            "quixx-foos" => [
+              "foo-baz" => sample_object,
+              "foo-bax" => sample_object
+            ]
+          }
+        end
+
         def show(_params)
           {
             "foo-baz" => {
               "biz-baz" => {
-                "super-duper" => "grovy"
+                "super-duper" => "groovy-enchiladas"
               },
               "fizz-buzz" => "baz",
               "foo-bar" => "biz"
             }
+          }
+        end
+
+        private
+
+        def sample_object
+          {
+            "biz-baz" => {
+              "super-duper" => "groovy-burritos"
+            },
+            "fizz-buzz" => "baz",
+            "foo-bar" => "biz"
           }
         end
       end
@@ -210,13 +274,35 @@ RSpec.describe CarrotRpc::RpcClient do
       after(:each) do
         CarrotRpc.configuration.rpc_client_response_key_format = :none
       end
+
       # lets
 
-      let(:result) do
+      let(:index_result) do
+        {
+          "quixx_foos" => [
+            "foo_baz" => {
+              "biz_baz" => {
+                "super_duper" => "groovy-burritos"
+              },
+              "fizz_buzz" => "baz",
+              "foo_bar" => "biz"
+            },
+            "foo_bax" => {
+              "biz_baz" => {
+                "super_duper" => "groovy-burritos"
+              },
+              "fizz_buzz" => "baz",
+              "foo_bar" => "biz"
+            }
+          ]
+        }
+      end
+
+      let(:show_result) do
         {
           "foo_baz" => {
             "biz_baz" => {
-              "super_duper" => "grovy"
+              "super_duper" => "groovy-enchiladas"
             },
             "fizz_buzz" => "baz",
             "foo_bar" => "biz"
@@ -226,9 +312,66 @@ RSpec.describe CarrotRpc::RpcClient do
 
       # Callbacks
 
-      it "parses the payload from json to hash and changes '-' to '_' in the keys" do
-        expect(client.show({})).to eq result
+      it "parses the payload from json to hash and changes '-' to '_' in the nested keys for index response" do
+        expect(client.index({})).to eq index_result
       end
+
+      it "parses the payload from json to hash and changes '-' to '_' in the keys show response" do
+        expect(client.show({})).to eq show_result
+      end
+    end
+  end
+
+  describe "#parse_response" do
+    it "returns the result data" do
+      response = { 'jsonrpc': "2.0", 'result': { 'foo': "bar" }, 'id': 1 }
+      parsed_response = client.send(:parse_response, response)
+
+      expect(parsed_response).to eq('foo': "bar")
+    end
+
+    it "raises an exception for an invalid method error" do
+      response = { 'jsonrpc': "2.0", 'error': { 'code': -32_601, 'message': "Method not found" }, 'id': 1 }
+      parsed_response = client.send(:parse_response, response)
+
+      expect(parsed_response).to be_a(CarrotRpc::Error)
+      expect(parsed_response.code).to eq(-32_601)
+      expect(parsed_response.message).to eq("Method not found")
+    end
+
+    it "raises an exception for a server error with data" do
+      response = {
+        'jsonrpc': "2.0",
+        'error': {
+          'code': -32_000,
+          'message': "Application specific error",
+          'data': { 'foo': "bar is not allowed" }
+        },
+        'id': 1
+      }
+      parsed_response = client.send(:parse_response, response)
+
+      expect(parsed_response).to be_a(CarrotRpc::Error)
+      expect(parsed_response.code).to eq(-32_000)
+      expect(parsed_response.message).to eq("Application specific error")
+      expect(parsed_response.data).to eq('foo': "bar is not allowed")
+    end
+
+    it "raises an exception for a server error without data" do
+      response = { 'jsonrpc': "2.0", 'error': { 'code': -32_000, 'message': "Application specific error" }, 'id': 1 }
+      parsed_response = client.send(:parse_response, response)
+
+      expect(parsed_response).to be_a(CarrotRpc::Error)
+      expect(parsed_response.code).to eq(-32_000)
+      expect(parsed_response.message).to eq("Application specific error")
+      expect(parsed_response.data).to be_nil
+    end
+
+    it "raises an exception for an error with no code or message" do
+      response = { 'jsonrpc': "2.0", 'error': {}, 'id': 1 }
+      parsed_response = client.send(:parse_response, response)
+
+      expect(parsed_response).to be_a(CarrotRpc::Exception::InvalidResponse)
     end
   end
 

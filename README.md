@@ -11,6 +11,8 @@
     - [Writing Servers](#writing-servers)
     - [Writing Clients](#writing-clients)
       - [Using request threading in clients](#using-request-threading-in-clients)
+    - [Custom Queue Options](#custom-queue-options)
+      - [Errors](#errors)
     - [Support for JSONAPI::Resources](#support-for-jsonapiresources)
   - [Development](#development)
   - [Contributing](#contributing)
@@ -249,6 +251,21 @@ class ProfileClient < CarrotRpc::RpcClient
 end
 ```
 
+### Custom Queue Options
+By default, client queues are defined with `auto_delete: false`, and server queues are defined with no parameters, so use the Bunny/RabbitMQ defaults. These can be customised by calling the `queue_options` class method to add to or override these options on either a RpcClient or RpcServer subclass. This method takes any queue parameter accepted by Bunny.
+Care should be taken when setting these options, as CarrotRPC does not attempt to fix mistakes here. The defaults are typically what you want.
+
+The following overrides the default CarrotRpc auto_delete option, and sets durable to true:
+```ruby
+  class CarClient < CarrotRpc::RpcClient
+    queue_name "car_queue"
+    queue_options auto_delete: true, durable: true
+  end
+```
+
+#### Errors
+If a JSON-RPC error is returned, a CarrotRpc::Error exception is raised with the appropriate attributes set. If a malformed JSON-RPC error is returned (i.e. code or message are missing), an CarrotRpc::Exception::InvalidResponse exception is raised.
+
 ### Support for JSONAPI::Resources
 In the case that you're writing an application that uses the `jsonapi-resources` gem and you want the `RpcServer` to have the same functionality, then we got you covered. All you need to do is import a few modules. See [jsonapi-resources](https://github.com/cerebris/jsonapi-resources) for details on how to implement resources for your models.
 
@@ -257,25 +274,25 @@ Example Server with JSONAPI functionality:
 class CarServer < CarrotRpc::RpcServer
   extend CarrotRpc::RpcServer::JSONAPIResources::Actions
   include CarrotRpc::RpcServer::JSONAPIResources
-  
+
   # declare the actions to enable
   actions: :create, :destroy, :index, :show, :update
- 
+
   # Context so it can build urls
   def base_url
     "http://foo.com"
   end
-  
+
   # Context to find the resource and create links.
   def controller
     "api/cars"
   end
- 
+
   # JSONAPI::Resource example: `app/resources/car_resource.rb`
   def resource_klass
     CarResource
   end
-  
+
   queue_name "car_queue"
 
   def show(params)

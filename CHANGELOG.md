@@ -3,6 +3,8 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Changelog](#changelog)
+  - [v1.0.0](#v100)
+    - [Incompatible Changes](#incompatible-changes)
   - [v0.8.1](#v081)
     - [Enhancements](#enhancements)
   - [v0.8.0](#v080)
@@ -11,20 +13,20 @@
     - [Bug Fixes](#bug-fixes)
   - [v0.7.0](#v070)
     - [Bug Fixes](#bug-fixes-1)
-    - [Incompatible Changes](#incompatible-changes)
+    - [Incompatible Changes](#incompatible-changes-1)
   - [v0.6.0](#v060)
     - [Enhancements](#enhancements-2)
   - [v0.5.1](#v051)
     - [Bug Fixes](#bug-fixes-2)
   - [v0.5.0](#v050)
     - [Enhancements](#enhancements-3)
-    - [Incompatible Changes](#incompatible-changes-1)
+    - [Incompatible Changes](#incompatible-changes-2)
   - [v0.4.1](#v041)
     - [Bug Fixes](#bug-fixes-3)
   - [v0.4.0](#v040)
     - [Enhancements](#enhancements-4)
     - [Bug Fixes](#bug-fixes-4)
-    - [Incompatible Changes](#incompatible-changes-2)
+    - [Incompatible Changes](#incompatible-changes-3)
   - [v0.3.0](#v030)
     - [Enhancements](#enhancements-5)
     - [Bug Fixes](#bug-fixes-5)
@@ -37,19 +39,26 @@
   - [v0.2.0](#v020)
     - [Enhancements](#enhancements-7)
     - [Bug Fixes](#bug-fixes-8)
-    - [Incompatible Changes](#incompatible-changes-3)
+    - [Incompatible Changes](#incompatible-changes-4)
   - [v0.1.2](#v012)
     - [Enhancements](#enhancements-8)
     - [Bug Fixes](#bug-fixes-9)
   - [v0.1.1](#v011)
     - [Enhancements](#enhancements-9)
     - [Bug Fixes](#bug-fixes-10)
-    - [Incompatible Changes](#incompatible-changes-4)
+    - [Incompatible Changes](#incompatible-changes-5)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Changelog
 All significant changes in the project are documented here.
+
+## v1.0.0
+### Incompatible Changes
+* [#48](https://github.com/C-S-D/carrot_rpc/pull/48) - Remove queue for correlation_id when RpcClient#wait_for_result raises an exception. -[@nward](https://github.com/nward)
+* [#50](https://github.com/C-S-D/carrot_rpc/pull/50) - Raise an exception for error responses to let consuming application handle response. -[@nward](https://github.com/nward)
+* [#52](https://github.com/C-S-D/carrot_rpc/pull/52) - Allow custom queue options to be set -[@nward](https://github.com/nward)
+* [#53](https://github.com/C-S-D/carrot_rpc/pull/53) - Rename keys for any hashes inside arrays. Fixes issue [#35](https://github.com/C-S-D/carrot_rpc/issues/35) -[@thewalkingtoast](https://github.com/thewalkingtoast)
 
 ## v0.8.1
 ### Enhancements

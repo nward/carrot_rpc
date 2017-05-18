@@ -40,7 +40,8 @@ class CarrotRpc::RpcClient
 
     queue_name = self.class.test_queue_name(self.class.queue_name, @config.client_test_mode)
     # auto_delete => false keeps the queue around until RabbitMQ restarts or explicitly deleted
-    @server_queue = @channel.queue(queue_name, auto_delete: false)
+    options = { auto_delete: false }.merge(self.class.queue_options)
+    @server_queue = @channel.queue(queue_name, options)
 
     # Setup a direct exchange.
     @exchange = @channel.default_exchange
@@ -87,10 +88,16 @@ class CarrotRpc::RpcClient
       # and this must happend before the `Hash.delete` or
       # the receiving thread won't be able to find the correlation_id in @results
       result = @results[correlation_id].pop
-      @results.delete correlation_id # remove item from hash. prevents memory leak.
+
+      # If we get an exception, raise it in this thread, so the application can deal with it.
+      if result.is_a? Exception
+        fail result
+      end
+
       result
     end
   ensure
+    @results.delete correlation_id # remove item from hash. prevents memory leak.
     @channel.close
   end
 
@@ -151,10 +158,28 @@ class CarrotRpc::RpcClient
       response[:result]
     # data is the key holding the error information
     elsif response.key?(:error)
-      response[:error][:data]
+      parse_error_result(response)
     else
       response
     end
+  end
+
+  # Build an CarrotRpc::Error based on an error response or throw CarrotRpc::Exception::InvalidResponse if
+  # the response error itself is invalid.
+  # @param [Hash] response from rpc call
+  # @return [CarrotRpc::Error, CarrotRpc::Exception::InvalidResponse]
+  def parse_error_result(response)
+    # If we don't have a code, throw an exception.
+    unless response[:error].key?(:code) &&
+           response[:error].key?(:message)
+      return CarrotRpc::Exception::InvalidResponse.new
+    end
+
+    CarrotRpc::Error.new(
+      code: response[:error][:code],
+      data: response[:error].key?(:data) ? response[:error][:data] : nil,
+      message: response[:error][:message]
+    )
   end
 
   def publish_payload(payload, correlation_id:)
