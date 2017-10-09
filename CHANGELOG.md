@@ -3,55 +3,92 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Changelog](#changelog)
+  - [v1.2.1](#v121)
+    - [Bug Fixes](#bug-fixes)
+  - [v1.2.0](#v120)
+    - [Enhancements](#enhancements)
+    - [Bug Fixes](#bug-fixes-1)
+  - [v1.1.0](#v110)
+    - [Enhancements](#enhancements-1)
+    - [Bug Fixes](#bug-fixes-2)
   - [v1.0.0](#v100)
     - [Incompatible Changes](#incompatible-changes)
   - [v0.8.1](#v081)
-    - [Enhancements](#enhancements)
+    - [Enhancements](#enhancements-2)
   - [v0.8.0](#v080)
-    - [Enhancements](#enhancements-1)
+    - [Enhancements](#enhancements-3)
   - [v0.7.1](#v071)
-    - [Bug Fixes](#bug-fixes)
+    - [Bug Fixes](#bug-fixes-3)
   - [v0.7.0](#v070)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-4)
     - [Incompatible Changes](#incompatible-changes-1)
   - [v0.6.0](#v060)
-    - [Enhancements](#enhancements-2)
+    - [Enhancements](#enhancements-4)
   - [v0.5.1](#v051)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-5)
   - [v0.5.0](#v050)
-    - [Enhancements](#enhancements-3)
+    - [Enhancements](#enhancements-5)
     - [Incompatible Changes](#incompatible-changes-2)
   - [v0.4.1](#v041)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-6)
   - [v0.4.0](#v040)
-    - [Enhancements](#enhancements-4)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Enhancements](#enhancements-6)
+    - [Bug Fixes](#bug-fixes-7)
     - [Incompatible Changes](#incompatible-changes-3)
   - [v0.3.0](#v030)
-    - [Enhancements](#enhancements-5)
-    - [Bug Fixes](#bug-fixes-5)
-  - [v0.2.3](#v023)
-    - [Enhancements](#enhancements-6)
-    - [Bug Fixes](#bug-fixes-6)
-    - [Upgrading](#upgrading)
-  - [v0.2.1](#v021)
-    - [Bug Fixes](#bug-fixes-7)
-  - [v0.2.0](#v020)
     - [Enhancements](#enhancements-7)
     - [Bug Fixes](#bug-fixes-8)
-    - [Incompatible Changes](#incompatible-changes-4)
-  - [v0.1.2](#v012)
+  - [v0.2.3](#v023)
     - [Enhancements](#enhancements-8)
     - [Bug Fixes](#bug-fixes-9)
-  - [v0.1.1](#v011)
-    - [Enhancements](#enhancements-9)
+    - [Upgrading](#upgrading)
+  - [v0.2.1](#v021)
     - [Bug Fixes](#bug-fixes-10)
+  - [v0.2.0](#v020)
+    - [Enhancements](#enhancements-9)
+    - [Bug Fixes](#bug-fixes-11)
+    - [Incompatible Changes](#incompatible-changes-4)
+  - [v0.1.2](#v012)
+    - [Enhancements](#enhancements-10)
+    - [Bug Fixes](#bug-fixes-12)
+  - [v0.1.1](#v011)
+    - [Enhancements](#enhancements-11)
+    - [Bug Fixes](#bug-fixes-13)
     - [Incompatible Changes](#incompatible-changes-5)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Changelog
 All significant changes in the project are documented here.
+
+## v1.2.1
+
+### Bug Fixes
+* [#58](https://github.com/C-S-D/carrot_rpc/pull/58) - Don't convert all hash-like things to hashes: preserve `HashWithIndifferentAccess` after renaming keys with `rename_keys` refinement. - [@jeffutter](https://github.com/jeffutter)
+
+## v1.2.0
+
+### Enhancements
+* [#57](https://github.com/C-S-D/carrot_rpc/pull/57) - Regression test to prevent rename_keys being called on `String` - [@KronicDeth](https://gitub.com/KronicDeth)
+
+### Bug Fixes
+* [#57](https://github.com/C-S-D/carrot_rpc/pull/57) - Only rename key in values that are `Array`s or `Hash`es. - [@KronicDeth](https://gitub.com/KronicDeth)
+
+## v1.1.0
+
+### Enhancements
+* [#55](https://github.com/C-S-D/carrot_rpc/pull/55) - [@shamil614](https://github.com/shamil614)
+  * `ActiveSupport::Notifications` to enable universal metrics gathering
+    * `client.SERVER_QUEUE.remote_call` will include `correlation_id` of request
+    * `server.SERVER_QUEUE.consume` will include `correlation_id` of request
+* [#56](https://github.com/C-S-D/carrot_rpc/pull/56) - [@KronicDeth](https://gitub.com/KronicDeth)
+  * Match client log tags to server log tags.
+    * Client tags will start with `client` as server tags start with `server`. 
+    * When available, it will have `server_queue=SERVER_QUEUE_NAME`.
+    * Finally, it will always have `correlation_id=CORRELATION_ID`.
+
+### Bug Fixes
+* [#56](https://github.com/C-S-D/carrot_rpc/pull/56) - `client.SERVER_QUEUE_NAME.remote_call` `ActiveSupport::Notification` was using the server queue object instead of name, so it interpolated as `#<...>`. - [@KronicDeth](https://gitub.com/KronicDeth)
 
 ## v1.0.0
 ### Incompatible Changes

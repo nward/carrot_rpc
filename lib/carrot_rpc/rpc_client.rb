@@ -70,16 +70,26 @@ class CarrotRpc::RpcClient
   # @param remote_method [String, Symbol] the method to be called on current receiver
   # @param params [Hash] the arguments for the method being called.
   # @return [Object] the result of the method call.
+  #
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def remote_call(remote_method, params)
     start
     subscribe
+    server_queue_name = server_queue.name
     correlation_id = SecureRandom.uuid
-    logger.with_correlation_id(correlation_id) do
-      params = self.class.before_request.call(params) if self.class.before_request
-      publish(correlation_id: correlation_id, method: remote_method, params: request_key_formatter(params))
-      wait_for_result(correlation_id)
-    end
+    extra = { correlation_id: correlation_id }
+
+    ActiveSupport::Notifications.instrument("client.#{server_queue_name}.remote_call", extra: extra) {
+      logger.tagged("client", "server_queue=#{server_queue_name}", "correlation_id=#{correlation_id}") {
+        params = self.class.before_request.call(params) if self.class.before_request
+        publish(correlation_id: correlation_id, method: remote_method, params: request_key_formatter(params))
+        wait_for_result(correlation_id)
+      }
+    }
   end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   def wait_for_result(correlation_id)
     # Should be good to timeout here because we're blocking in the main thread here.
@@ -138,15 +148,17 @@ class CarrotRpc::RpcClient
   private
 
   def consume(_delivery_info, properties, payload)
-    logger.with_correlation_id(properties[:correlation_id]) do
+    correlation_id = properties[:correlation_id]
+
+    logger.tagged("client", "correlation_id=#{correlation_id}") {
       logger.debug "Receiving response: #{payload}"
 
       response = JSON.parse(payload).with_indifferent_access
 
       result = parse_response(response)
       result = response_key_formatter(result).with_indifferent_access if result.is_a? Hash
-      @results[properties[:correlation_id]].push(result)
-    end
+      @results[correlation_id].push(result)
+    }
   end
 
   # Logic to find the data from the RPC response.

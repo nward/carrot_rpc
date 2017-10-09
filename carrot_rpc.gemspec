@@ -6,8 +6,8 @@ require "carrot_rpc/version"
 Gem::Specification.new do |spec|
   spec.name          = "carrot_rpc"
   spec.version       = CarrotRpc::VERSION
-  spec.authors       = ["Scott Hamilton", "Luke Imhoff"]
-  spec.email         = ["shamil614@gmail.com", "Kronic.Deth@gmail.com"]
+  spec.authors       = ["Scott Hamilton", "Luke Imhoff", "Jeff Utter"]
+  spec.email         = ["shamil614@gmail.com", "Kronic.Deth@gmail.com", "jeff@jeffutter.com"]
 
   spec.summary       = "Remote Procedure Call (RPC) using the Bunny Gem over RabbitMQ"
   spec.description   = "Streamlined approach to setting up RPC over RabbitMQ."

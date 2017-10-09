@@ -24,6 +24,7 @@ Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each do |f|
 end
 
 require "carrot_rpc"
+require "active_support/tagged_logging"
 
 RSpec.configure do |config|
   config.before(:suite) do

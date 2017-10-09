@@ -2,6 +2,7 @@
 require "active_support/core_ext/hash/indifferent_access"
 require "active_support/core_ext/hash/except"
 require "active_support/dependencies/autoload"
+require "active_support/notifications"
 require "bunny"
 
 # standard library

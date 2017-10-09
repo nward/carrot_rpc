@@ -59,19 +59,25 @@ class CarrotRpc::RpcServer
                  request_message: request_message
   end
 
-  def consume(_delivery_info, properties, payload)
-    logger.tagged("server", "queue=#{server_queue.name}", "correlation_id=#{properties[:correlation_id]}") do
-      logger.debug "Receiving request: #{payload}"
+  def consume(_delivery_info, properties, payload) # rubocop:disable Metrics/MethodLength
+    queue_name = server_queue.name
+    correlation_id = properties[:correlation_id]
+    extra = { correlation_id: correlation_id }
 
-      # rubocop:disable Lint/RescueException
-      begin
-        request_message = JSON.parse(payload).with_indifferent_access
+    ActiveSupport::Notifications.instrument("server.#{queue_name}.consume", extra: extra) do
+      logger.tagged("server", "queue=#{queue_name}", "correlation_id=#{correlation_id}") do
+        logger.debug "Receiving request: #{payload}"
 
-        process_request(request_message, properties: properties)
-      rescue Exception => exception
-        logger.error(exception)
+        # rubocop:disable Lint/RescueException
+        begin
+          request_message = JSON.parse(payload).with_indifferent_access
+
+          process_request(request_message, properties: properties)
+        rescue Exception => exception
+          logger.error(exception)
+        end
+        # rubocop:enable Lint/RescueException
       end
-      # rubocop:enable Lint/RescueException
     end
   end
 
