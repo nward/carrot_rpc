@@ -218,7 +218,7 @@ class CarrotRpc::RpcClient
     logger.debug "Publishing request: #{payload}"
     @exchange.publish payload,
                       correlation_id: correlation_id,
-                      reply_to:       @reply_queue.name,
+                      reply_to:       (@reply_queue ? @reply_queue.name : nil),
                       routing_key:    @server_queue.name
   end
 end
