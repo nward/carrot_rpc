@@ -91,6 +91,20 @@ class CarrotRpc::RpcClient
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
 
+  def remote_notify(remote_method, params)
+    start
+    server_queue_name = server_queue.name
+    correlation_id = SecureRandom.uuid
+    extra = { correlation_id: correlation_id }
+
+    ActiveSupport::Notifications.instrument("client.#{server_queue_name}.remote_notify", extra: extra) {
+      logger.tagged("client", "server_queue=#{server_queue_name}", "correlation_id=#{correlation_id}") {
+        params = self.class.before_request.call(params) if self.class.before_request
+        publish(correlation_id: correlation_id, method: remote_method, notification: true, params: request_key_formatter(params))
+      }
+    }
+  end
+
   def wait_for_result(correlation_id)
     # Should be good to timeout here because we're blocking in the main thread here.
     Timeout.timeout(@config.rpc_client_timeout, CarrotRpc::Exception::RpcClientTimeout) do
@@ -127,22 +141,26 @@ class CarrotRpc::RpcClient
 
   # A @reply_queue is deleted when the channel is closed.
   # Closing the channel accounts for cleanup of the client @reply_queue.
-  def publish(correlation_id:, method:, params:)
+  def publish(correlation_id:, method:, notification: false, params:)
     message = message(
       correlation_id: correlation_id,
+      notification:   notification,
       params:         params,
       method:         method
     )
     publish_payload(message.to_json, correlation_id: correlation_id)
   end
 
-  def message(correlation_id:, method:, params:)
-    {
-      id:      correlation_id,
-      jsonrpc: "2.0",
-      method:  method,
-      params:  params.except(:controller, :action)
-    }
+  def message(correlation_id:, method:, notification: false, params:)
+    message =
+      {
+        jsonrpc: "2.0",
+        method:  method,
+        params:  params.except(:controller, :action)
+      }
+    message[:id] = correlation_id if not notification
+
+    message
   end
 
   private

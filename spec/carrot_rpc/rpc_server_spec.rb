@@ -1,5 +1,6 @@
 require "spec_helper"
 require "carrot_rpc"
+require "securerandom"
 
 RSpec.describe CarrotRpc::RpcServer do
   # Methods
@@ -23,6 +24,10 @@ RSpec.describe CarrotRpc::RpcServer do
     let(:rpc_server_class) {
       Class.new(CarrotRpc::RpcServer) do
         queue_name "foo"
+
+        def something(test)
+          test
+        end
       end
     }
 
@@ -37,6 +42,7 @@ RSpec.describe CarrotRpc::RpcServer do
 
       let(:request_message) {
         {
+          id: SecureRandom.uuid,
           method: "unknown_method"
         }
       }
@@ -72,6 +78,93 @@ RSpec.describe CarrotRpc::RpcServer do
             )
           )
         )
+
+        process_request
+      end
+    end
+
+    context "with supported method" do
+      #
+      # lets
+      #
+
+      let(:properties) {
+        {}
+      }
+
+      let(:request_message) {
+        {
+          id: SecureRandom.uuid,
+          method: "something",
+          params: 'hello'
+        }
+      }
+
+      #
+      # Callbacks
+      #
+
+      before(:each) do
+        # Delete queue if another test did not clean up properly, such as due to interrupt
+        delete_queue
+      end
+
+      after(:each) do
+        rpc_server.channel.close
+
+        # Clean up properly
+        delete_queue
+      end
+
+      it "replies" do
+        expect(rpc_server).to receive(:reply).with(
+          hash_including(
+            properties: properties,
+            response_message: hash_including(
+              id: request_message.fetch(:id),
+              result: 'hello'
+            )
+          )
+        )
+
+        process_request
+      end
+    end
+
+    context "with supported method and notification" do
+      #
+      # lets
+      #
+
+      let(:properties) {
+        {}
+      }
+
+      let(:request_message) {
+        {
+          method: "something",
+          params: 'hello'
+        }
+      }
+
+      #
+      # Callbacks
+      #
+
+      before(:each) do
+        # Delete queue if another test did not clean up properly, such as due to interrupt
+        delete_queue
+      end
+
+      after(:each) do
+        rpc_server.channel.close
+
+        # Clean up properly
+        delete_queue
+      end
+
+      it "doesn't reply" do
+        expect(rpc_server).to_not receive(:reply)
 
         process_request
       end

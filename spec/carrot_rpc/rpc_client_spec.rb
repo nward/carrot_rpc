@@ -150,6 +150,67 @@ RSpec.describe CarrotRpc::RpcClient do
     end
   end
 
+  describe "#remote_notify" do
+    before :each do
+      CarrotRpc.configuration.rpc_client_request_key_format = :dasherize
+      CarrotRpc.configuration.rpc_client_response_key_format = :underscore
+
+      client_class.queue_name "lannister"
+      client.start
+    end
+
+    after :each do
+      CarrotRpc.configuration.rpc_client_request_key_format = :none
+      CarrotRpc.configuration.rpc_client_response_key_format = :none
+    end
+
+    it "calls all the important methods needed for a request, and does not wait for a response" do
+      allow(client).to receive :start
+      allow(client).to receive :publish
+
+      correlation_id = "ABC123"
+      allow(SecureRandom).to receive(:uuid) { correlation_id }
+
+      expect(client).to receive :start
+
+      method = :foo_bar
+      params = {}
+      expect(client).to receive(:publish).with(correlation_id: correlation_id, method: method, notification: true, params: params)
+      expect(client).to_not receive(:wait_for_result)
+
+      subject.remote_notify(method, params)
+    end
+
+    it "does nothing if a Proc is not set" do
+      params = { data: { name: "foo" } }
+      method = :foo_method
+      random_id = SecureRandom.uuid
+
+      allow(SecureRandom).to receive(:uuid) { random_id }
+      allow(client).to receive(:publish)
+      allow(client).to receive(:wait_for_result)
+
+      result_params = { "data" => { "name" => "foo" } }
+      expect(client).to receive(:publish).with(correlation_id: random_id, method: method, notification: true, params: result_params)
+      subject.remote_notify(method, params)
+    end
+
+    it "passes params to Proc before making a remote call" do
+      client_class.before_request proc { |params| params.merge(meta: "foo") }
+      params = { data: { name: "foo" } }
+      method = :foo_method
+      random_id = SecureRandom.uuid
+
+      allow(SecureRandom).to receive(:uuid) { random_id }
+      allow(client).to receive(:publish)
+      allow(client).to receive(:wait_for_result)
+
+      result_params = { "data" => { "name" => "foo" }, "meta" => "foo" }
+      expect(client).to receive(:publish).with(correlation_id: random_id, method: method, notification: true, params: result_params)
+      subject.remote_notify(method, params)
+    end
+  end
+
   describe "#wait_for_result" do
     before :each do
       client_class.queue_name "lannister"

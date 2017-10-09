@@ -28,9 +28,11 @@ module CarrotRpc::Reply
                                  message: "Method not found"
     logger.error(error)
 
-    reply_error error.serialized_message,
-                properties:      properties,
-                request_message: request_message
+    if request_message.has_key? :id
+      reply_error error.serialized_message,
+                  properties:      properties,
+                  request_message: request_message
+    end
   end
 
   # See http://www.jsonrpc.org/specification#response_object

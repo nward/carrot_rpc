@@ -50,13 +50,17 @@ class CarrotRpc::RpcServer
   rescue CarrotRpc::Error => rpc_server_error
     logger.error(rpc_server_error)
 
-    reply_error rpc_server_error.serialized_message,
-                properties:      properties,
-                request_message: request_message
+    if request_message.has_key? :id
+      reply_error rpc_server_error.serialized_message,
+                  properties:      properties,
+                  request_message: request_message
+    end
   else
-    reply_result result,
-                 properties:      properties,
-                 request_message: request_message
+    if request_message.has_key? :id
+      reply_result result,
+                   properties:      properties,
+                   request_message: request_message
+    end
   end
 
   def consume(_delivery_info, properties, payload) # rubocop:disable Metrics/MethodLength
